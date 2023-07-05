@@ -8,7 +8,8 @@ module controller (
     output npc_in,
     output decode_ena,
     output ir_in,
-    output regfile_w
+    output regfile_w,
+    output ref_waddr_signal
     
     
 );
@@ -36,6 +37,7 @@ assign npc_in=!rst&states[1];
 assign pc_ena=states[0]&!rst;
 assign ir_in=!rst&states[0];
 assign decode_ena=!rst&states[0];
+assign regfile_w=!rst&states[4]&(decoded_instr[0]);
 
 
 

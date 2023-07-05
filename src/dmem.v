@@ -9,7 +9,7 @@ module dmem (
 );
 
 
-reg [31:0] mem[31:0];
+reg [31:0] mem[1023:0];
 assign  dm_rdata=dm_r ? mem[dm_addr]:32'bz;
 always @(posedge clk) 
 begin
