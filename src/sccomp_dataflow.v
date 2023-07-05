@@ -39,10 +39,10 @@ assign instruction_addr=(instr_addr_read-32'h00400000)/4;
 
 wire dmem_w;
 wire dmem_r;
-wire special_store_signal;
+wire [1:0] store_format_signal;
 
 cpu sccpu(.clk(~clk_in),.rst(reset),.instr(instruction),.dmem_data(r_data),.data_addr(data_addr_read),.w_data(w_data),
-    .instr_addr(instr_addr_read),.dmem_r(dmem_r),.dmem_w(dmem_w),.special_store_signal(special_store_signal));
+    .instr_addr(instr_addr_read),.dmem_r(dmem_r),.dmem_w(dmem_w),.store_format_signal(store_format_signal));
 
 dmem dmem_inst(.clk(~clk_in),.dm_w(dmem_w),.dm_r(dmem_r),.dm_addr(data_addr),.dm_wdata(w_data),.dm_rdata(r_data),.special_store_signal(special_store_signal));
 
