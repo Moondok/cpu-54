@@ -13,6 +13,8 @@ module cpu (
     output [1:0] store_format_signal
 );
 
+wire Rs_signal=Rs_value[31]; //decide whether Rs is negative or positive , specially for 'bgez'
+
 
 wire [31:0] operand_a;
 wire [31:0] operand_b;
@@ -34,7 +36,7 @@ assign w_data=Rt_value;
 //4 candidates for operand_b : 1.Rt_value 2.imm 3. 4   4.ext18(bne beq bgez)
 
 // select the operand a
-mux4 #(32) mux4_inst4(.in1(Rs_value),.in2(re_ext5),.in3(pc_value),.in4(32'bz),.signal(operand1_signal),.o(operand_a));
+mux4 #(32) mux4_inst4(.in1(Rs_value),.in2(re_ext5),.in3(npc_value),.in4(32'bz),.signal(operand1_signal),.o(operand_a));
 
 //select the operand b
 mux4 #(32) mux4_inst5(.in1(Rt_value),.in2(re_ext_imm),.in3(re_ext18),.in4(32'd4),.signal(operand2_signal),.o(operand_b));
@@ -56,7 +58,7 @@ wire [53:0] decoded_instr;
 wire ir_in;
 wire decode_ena;
 wire pc_ena;
-wire npc_in;
+wire [31:0] npc_in;
 wire regfile_w;
 wire [1:0]ref_waddr_signal;
 wire ext5_input_signal;  //decide put which one to ext5
@@ -70,7 +72,8 @@ wire zout;
 wire MDR_in;
 wire [1:0]operand1_signal;
 wire [1:0]operand2_signal;
-controller controller_inst(.clk(clk),.rst(rst),.decoded_instr(decoded_instr),.decode_ena(decode_ena),.pc_ena(pc_ena),regfile_w(regfile_w),.ref_waddr_signal(ref_waddr_signal));
+controller controller_inst(.clk(clk),.rst(rst),.decoded_instr(decoded_instr),.decode_ena(decode_ena),.pc_ena(pc_ena),regfile_w(regfile_w),
+                           .ref_waddr_signal(ref_waddr_signal),.zero(zero_signal),.Rs_signal(Rs_signal));
 
 instrument_decoder decodere_inst(.raw_instruction(instr),.ena(decode_ena),.code(decoded_instr));
 
@@ -114,5 +117,5 @@ mux4 #(32) mux4_inst3(.in1(dmem_data),.in2(re_ext_dmem_hw),.in3(re_ext_dmem_b),.
 
 //bne beq,bgez due to the extend method always be signed  we set sign as 1'b1
 wire [31:0] re_ext18;
-ext #(18) ext_inst5(.in(instr[15:0]),.sign(1'b1),.o(re_ext18));
+ext #(18) ext_inst5(.in({instr[15:0],2'b00}),.sign(1'b1),.o(re_ext18));
 endmodule //cpu

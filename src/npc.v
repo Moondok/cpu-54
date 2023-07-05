@@ -9,7 +9,7 @@ reg [31:0] next_instr_addr;
 always @(*) 
 begin
     if(rst)
-        next_instr_addr<=32'b0;
+        next_instr_addr<=32'h00400000;
     else if(npc_in)
         next_instr_addr<=data_in;
     

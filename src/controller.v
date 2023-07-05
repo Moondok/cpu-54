@@ -2,6 +2,8 @@ module controller (
     input clk,
     input rst,
     input [53:0] decoded_instr,
+    input zero,
+    input Rs_signal,
     output zin,
     output zout,
     output pc_ena, //pc register can be written
