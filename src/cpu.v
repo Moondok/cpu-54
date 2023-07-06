@@ -48,7 +48,7 @@ alu alu_inst(.a(operand_a),.b(operand_b),.aluc(alu_control),r(alu_result),.zero(
 
 z_reg z_reg_inst(.clk(clk),.zin(zin),.zout(zout),.rst(rst),.w_data(alu_result),.r_data(z_value));
 
-// there r 4 potential input for npc : 1.Z value 2.Rs_value(jr) 3.joint_addr
+// there r 4 potential input for npc : 1.Z value 2.Rs_value(jr) 3.joint_addr 4.exc_addrsys
 wire [31:0] npc_value;
 mux4 #(32) mux4_inst2(.in1(z_value),.in2(Rs_value),.in3(joint_addr),.in4(),.signal(),o(npc_wdata));
 wire [31:0] npc_wdata;
@@ -74,6 +74,8 @@ wire [1:0]operand1_signal;
 wire [1:0]operand2_signal;
 wire hi_ena;
 wire lo_ena;
+wire cp0_ena;
+wire [4:0] cp0_cause;
 controller controller_inst(.clk(clk),.rst(rst),.decoded_instr(decoded_instr),.decode_ena(decode_ena),.pc_ena(pc_ena),regfile_w(regfile_w),
                            .ref_waddr_signal(ref_waddr_signal),.zero(zero_signal),.Rs_signal(Rs_signal));
 
@@ -86,7 +88,7 @@ pcreg pc_inst(.clk(clk),.ena(pc_ena),.rstn(rst),.w_data(npc_value),.r_data(pc_va
 
 wire [31:0] Rs_value;
 wire [31:0] Rt_value;
-// for ref's wdata : alternatives contains :1. z value, 2. dmem_data (byte word or half word) dmem2ref 3.clz_value 4.hi_data 5.lo_data
+// for ref's wdata : alternatives contains :1. z value, 2. dmem_data (byte word or half word) dmem2ref 3.clz_value 4.hi_data 5.lo_data 6.cp0_data
 // for ref's waddr : alternatives contains :1. instr [15:11](Rd)  2.instr[15:11](Rt) 3.$31(jal)
 wire [31:0] ref_waddr;
 wire [31:0] ref_wdata;
@@ -134,4 +136,9 @@ hilo hi_reg(.clk(clk),.rst(rst),.wdata(),.wena(hi_ena),.rdata());
 // there r ( ) candidates for lo_data : 1.Rs_value
 wire [31:0] lo_data;
 hilo lo_reg(.clk(clk),.rst(rst),.wdata(),.wena(lo_ena),.rdata());
+
+wire [31:0] cp0_data;
+wire [31:0] exc_addr;
+cp0 cp0_inst(.clk(clk),.rst(rst),.ena(cp0_ena),.mfc0(decoded_instr[44]),.mtc0(decoded_instr[45]),.npc(npc_value),.Rd(instr[15:11]),.wdata(Rt_value),
+             .exception(decoded_instr[51]||decoded_instr[52]||decoded_instr[53]),.eret(decoded_instr[50]),.cause(cp0_cause),.rdata(cp0_data),.exc_addr(exc_addr));
 endmodule //cpu
