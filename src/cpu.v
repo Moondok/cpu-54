@@ -48,9 +48,9 @@ alu alu_inst(.a(operand_a),.b(operand_b),.aluc(alu_control),r(alu_result),.zero(
 
 z_reg z_reg_inst(.clk(clk),.zin(zin),.zout(zout),.rst(rst),.w_data(alu_result),.r_data(z_value));
 
-// there r 4 potential input for npc : 1.Z value 2.Rs_value(jr)
+// there r 4 potential input for npc : 1.Z value 2.Rs_value(jr) 3.joint_addr
 wire [31:0] npc_value;
-mux4 #(32) mux4_inst2(.in1(z_value),.in2(Rs_value),.in3(),.in4(),.signal(),o(npc_wdata));
+mux4 #(32) mux4_inst2(.in1(z_value),.in2(Rs_value),.in3(joint_addr),.in4(),.signal(),o(npc_wdata));
 wire [31:0] npc_wdata;
 npc npc_inst(.rst(rst),.data_in(npc_wdata),.npc_in(npc_in),.data_out(npc_value));
 
@@ -72,6 +72,8 @@ wire zout;
 wire MDR_in;
 wire [1:0]operand1_signal;
 wire [1:0]operand2_signal;
+wire hi_ena;
+wire lo_ena;
 controller controller_inst(.clk(clk),.rst(rst),.decoded_instr(decoded_instr),.decode_ena(decode_ena),.pc_ena(pc_ena),regfile_w(regfile_w),
                            .ref_waddr_signal(ref_waddr_signal),.zero(zero_signal),.Rs_signal(Rs_signal));
 
@@ -84,10 +86,12 @@ pcreg pc_inst(.clk(clk),.ena(pc_ena),.rstn(rst),.w_data(npc_value),.r_data(pc_va
 
 wire [31:0] Rs_value;
 wire [31:0] Rt_value;
-// for ref's wdata : alternatives contains :1. z value, 2. dmem_data (byte word or half word) dmem2ref
+// for ref's wdata : alternatives contains :1. z value, 2. dmem_data (byte word or half word) dmem2ref 3.clz_value 4.hi_data 5.lo_data
 // for ref's waddr : alternatives contains :1. instr [15:11](Rd)  2.instr[15:11](Rt) 3.$31(jal)
-mux4 #(5) mux4_inst1(.in1(instr[15:11]),.in2(instr[20:16]),.in3(5'd31),.in4(32'bz),.signal(ref_waddr_signal),.o(ref_addr));
-regfile cpu_ref(.clk(clk),.rst(rst),.we(regfile_w),.raddr1(instr[25:21]),.raddr2(instr[20:16]),.waddr(ref_addr),.rdata1(Rs_value),.rdata2(Rt_value),wdata(),.is_overflow(overflow_signal));
+wire [31:0] ref_waddr;
+wire [31:0] ref_wdata;
+mux4 #(5) mux4_inst1(.in1(instr[15:11]),.in2(instr[20:16]),.in3(5'd31),.in4(32'bz),.signal(ref_waddr_signal),.o(ref_waddr));
+regfile cpu_ref(.clk(clk),.rst(rst),.we(regfile_w),.raddr1(instr[25:21]),.raddr2(instr[20:16]),.waddr(ref_waddr),.rdata1(Rs_value),.rdata2(Rt_value),wdata(),.is_overflow(overflow_signal));
 
 // choose the input for ext5, 2 alternatives :1. instr[10:6](shamt), for sll srl sra     2.Rs for sllv srlv srav
 wire [4:0] ext5_input;
@@ -118,4 +122,16 @@ mux4 #(32) mux4_inst3(.in1(dmem_data),.in2(re_ext_dmem_hw),.in3(re_ext_dmem_b),.
 //bne beq,bgez due to the extend method always be signed  we set sign as 1'b1
 wire [31:0] re_ext18;
 ext #(18) ext_inst5(.in({instr[15:0],2'b00}),.sign(1'b1),.o(re_ext18));
+
+
+wire [31:0] joint_addr; // for j,jal
+// the input for joint is pc or npc is still unknown
+joint joint_inst(.pc_value(npc_value[31:28]),.jump_value({instr[25:0],2'b00}),.joint_addr(joint_addr));
+
+// there r ( ) candidates for hi_data : 1.Rs_value
+wire [31:0] hi_data;
+hilo hi_reg(.clk(clk),.rst(rst),.wdata(),.wena(hi_ena),.rdata());
+// there r ( ) candidates for lo_data : 1.Rs_value
+wire [31:0] lo_data;
+hilo lo_reg(.clk(clk),.rst(rst),.wdata(),.wena(lo_ena),.rdata());
 endmodule //cpu
