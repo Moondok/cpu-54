@@ -50,7 +50,7 @@ z_reg z_reg_inst(.clk(clk),.zin(zin),.zout(zout),.rst(rst),.w_data(alu_result),.
 
 // there r 4 potential input for npc : 1.Z value 2.Rs_value(jr) 3.joint_addr 4.exc_addrsys
 wire [31:0] npc_value;
-mux4 #(32) mux4_inst2(.in1(z_value),.in2(Rs_value),.in3(joint_addr),.in4(),.signal(),o(npc_wdata));
+mux4 #(32) mux4_inst2(.in1(z_value),.in2(Rs_value),.in3(joint_addr),.in4(exc_addr),.signal(npc_input_signal),o(npc_wdata));
 wire [31:0] npc_wdata;
 npc npc_inst(.rst(rst),.data_in(npc_wdata),.npc_in(npc_in),.data_out(npc_value));
 
@@ -67,7 +67,7 @@ wire extend16_signal1;  //decide how to extend imem
 wire extend16_signal2;
 wire extend8_signal1;
 wire [1:0] dmem2ref_signal; //choose dmem's data format : half word word or byte to ref
-wire npc_input_signal;// choose which data to npc
+wire [1:0] npc_input_signal;// choose which data to npc
 wire zin;
 wire zout;
 wire MDR_in;
