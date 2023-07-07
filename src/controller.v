@@ -4,6 +4,7 @@ module controller (
     input [53:0] decoded_instr,
     input zero,
     input Rs_signal,
+    input busy,
     output zin,
     output zout,
     output pc_ena, //pc register can be written
@@ -20,10 +21,12 @@ module controller (
     output MDR_ena,
     output [1:0] store_format_signal,
     output [4:0] cp0_cause,
-    output cp0_ena
+    output cp0_ena,
+    output div_start,
+    output divu_start,
+    output mul_start,
+    output mulu_start
 
-    
-    
 );
 
 localparam state0=1;

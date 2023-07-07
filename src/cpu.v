@@ -61,6 +61,7 @@ wire pc_ena;
 wire [31:0] npc_in;
 wire regfile_w;
 wire [1:0]ref_waddr_signal;
+wire [2:0]ref_wdata_signal;
 wire ext5_input_signal;  //decide put which one to ext5
 wire extend16_signal1;  //decide how to extend imem
 wire extend16_signal2;
@@ -76,6 +77,12 @@ wire hi_ena;
 wire lo_ena;
 wire cp0_ena;
 wire [4:0] cp0_cause;
+wire [1:0] hi_input_signal;
+wire [1:0] lo_input_signal;
+wire div_start;
+wire divu_start;
+wire mul_start;
+wire mulu_start;
 controller controller_inst(.clk(clk),.rst(rst),.decoded_instr(decoded_instr),.decode_ena(decode_ena),.pc_ena(pc_ena),regfile_w(regfile_w),
                            .ref_waddr_signal(ref_waddr_signal),.zero(zero_signal),.Rs_signal(Rs_signal));
 
@@ -88,12 +95,13 @@ pcreg pc_inst(.clk(clk),.ena(pc_ena),.rstn(rst),.w_data(npc_value),.r_data(pc_va
 
 wire [31:0] Rs_value;
 wire [31:0] Rt_value;
-// for ref's wdata : alternatives contains :1. z value, 2. dmem_data (byte word or half word) dmem2ref 3.clz_value 4.hi_data 5.lo_data 6.cp0_data
+// for ref's wdata : alternatives contains :1. z value, 2. dmem_data (byte word or half word) dmem2ref 3.clz_value 4.hi_data 5.lo_data 6.cp0_data 7.mul_res[31:0] 
 // for ref's waddr : alternatives contains :1. instr [15:11](Rd)  2.instr[15:11](Rt) 3.$31(jal)
 wire [31:0] ref_waddr;
 wire [31:0] ref_wdata;
+mux8 #(32) mux8_inst1(.in1(z_value),.in2(dmem2ref),.in3(clz_value),.in4(hi_data),.in5(lo_data),.in6(cp0_data),.in7(mul_res[31:0]),.in8(32'bz),.signal(ref_wdata_signal),.o(ref_wdata))
 mux4 #(5) mux4_inst1(.in1(instr[15:11]),.in2(instr[20:16]),.in3(5'd31),.in4(32'bz),.signal(ref_waddr_signal),.o(ref_waddr));
-regfile cpu_ref(.clk(clk),.rst(rst),.we(regfile_w),.raddr1(instr[25:21]),.raddr2(instr[20:16]),.waddr(ref_waddr),.rdata1(Rs_value),.rdata2(Rt_value),wdata(),.is_overflow(overflow_signal));
+regfile cpu_ref(.clk(clk),.rst(rst),.we(regfile_w),.raddr1(instr[25:21]),.raddr2(instr[20:16]),.waddr(ref_waddr),.rdata1(Rs_value),.rdata2(Rt_value),wdata(ref_wdata),.is_overflow(overflow_signal));
 
 // choose the input for ext5, 2 alternatives :1. instr[10:6](shamt), for sll srl sra     2.Rs for sllv srlv srav
 wire [4:0] ext5_input;
@@ -129,16 +137,43 @@ ext #(18) ext_inst5(.in({instr[15:0],2'b00}),.sign(1'b1),.o(re_ext18));
 wire [31:0] joint_addr; // for j,jal
 // the input for joint is pc or npc is still unknown
 joint joint_inst(.pc_value(npc_value[31:28]),.jump_value({instr[25:0],2'b00}),.joint_addr(joint_addr));
-
-// there r ( ) candidates for hi_data : 1.Rs_value
+  
+// there r ( ) candidates for hi_data : 1.Rs_value   2.r in div  3. ru in divu 4.res_mulu[63:32]
 wire [31:0] hi_data;
-hilo hi_reg(.clk(clk),.rst(rst),.wdata(),.wena(hi_ena),.rdata());
-// there r ( ) candidates for lo_data : 1.Rs_value
+wire [31:0] hi_input;
+mux4 #(32) mux4_inst6(.in1(Rs_value),.in2(res_r),.in3(res_ru),.in4(res_mulu[63:32]),.sign(hi_input_signal),.o(hi_input));
+hilo hi_reg(.clk(clk),.rst(rst),.wdata(hi_input),.wena(hi_ena),.rdata(hi_data));
+// there r ( ) candidates for lo_data : 1.Rs_value  2. q in div  3. qu in divu  4. res_mul[31:0]
 wire [31:0] lo_data;
-hilo lo_reg(.clk(clk),.rst(rst),.wdata(),.wena(lo_ena),.rdata());
+wire [31:0] lo_input;
+mux4 #(32) mux4_inst7(.in1(Rs_value),.in2(res_q),.in3(res_qu),.in4(res_mulu[31:0]),.sign(lo_input_signal),.o(lo_input));
+hilo lo_reg(.clk(clk),.rst(rst),.wdata(lo_input),.wena(lo_ena),.rdata(lo_data));
 
 wire [31:0] cp0_data;
 wire [31:0] exc_addr;
 cp0 cp0_inst(.clk(clk),.rst(rst),.ena(cp0_ena),.mfc0(decoded_instr[44]),.mtc0(decoded_instr[45]),.npc(npc_value),.Rd(instr[15:11]),.wdata(Rt_value),
              .exception(decoded_instr[51]||decoded_instr[52]||decoded_instr[53]),.eret(decoded_instr[50]),.cause(cp0_cause),.rdata(cp0_data),.exc_addr(exc_addr));
+
+
+
+wire busy;
+wire mul_done;
+wire mulu_done;
+wire div_busy;
+wire divu_busy;
+assign busy=!mul_done&&!mulu_done&&div_busy&&divu_busy;
+
+wire [31:0] res_q;
+wire [31:0] res_r;
+DIV div_inst(.dividend(Rs_value),.divisor(Rt_value),.start(div_start),.clock(clk),.reset(rst),.q(res_q),.r(res_r),.busy(div_busy));
+
+wire [31:0] res_qu;
+wire [31:0] res_ru;
+DIVU divu_inst(.dividend(Rs_value),.divisor(Rt_value),.start(divu_start),.clock(clk),.reset(rst),.q(res_qu),.r(res_ru),.busy(divu_busy));
+
+wire [63:0] res_mul;
+wire [63:0] res_mulu;
+MULT mult_inst(.clk(clk),.reset(rst),.a(Rs_value),.b(Rt_value),.start(mul_start),.z(res_mul),.done(mul_done));
+MULT mult_inst(.clk(clk),.reset(rst),.a(Rs_value),.b(Rt_value),.start(mulu_start),.z(res_mulu),.done(mulu_done));
+
 endmodule //cpu
