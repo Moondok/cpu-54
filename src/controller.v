@@ -10,10 +10,10 @@ module controller ( // 30 control signals
     output pc_ena, //pc register can be written  //ok
     output npc_in,  //ok
     output decode_ena, //ok
-    output ir_in,
+    output ir_in,     //ok
     output regfile_w, //ok
-    output [1:0] ref_waddr_signal,
-    output [2:0] ref_wdata_signal,
+    output [1:0] ref_waddr_signal,//ok
+    output [2:0] ref_wdata_signal,//ok
     output [1:0] npc_input_signal,
     output ext5_input_signal,   //ok
     output extend16_signal1, //for imm extend  //ok
@@ -58,7 +58,7 @@ begin
         states<=5'b0;
     end
 
-    else if(states==state0) // unconditional jump from state0 to state1
+    else if(states==state0) // unconditional jump from state0 to state1 
         states=state1;
 
     else if(states==state1)//instr[16](jr),directly to state0
@@ -66,8 +66,8 @@ begin
       if(decoded_instr[16]==1'b1) //jr
         states=state0;
 
-    //3 periods: mtc0 mfc0 eret break syscall
-      else if(decoded_instr[44]||decoded_instr[45]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53])
+    //3 periods: mtc0 mfc0 eret break syscall j
+      else if(decoded_instr[44]||decoded_instr[45]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||decoded_instr[30])
         states=state4;
 
     // 4 periods: 24 simple algorithmic instructions   ,  teq 
@@ -99,16 +99,26 @@ assign zin=!rst&&(
 
 assign zout=!rst&&(
   ((states[1]||states[4])&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]))  //24 simple algorithmic instructions, z should be read in the 2nd or the last period
+  ||
+  (states[2]&&(decoded_instr[31]||decoded_instr[36]))// for jal and jalr , to reserve the spot
 );
 
 assign npc_in=!rst&&(
-  (states[1]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]))  //24 simple algorithmic instructions
+  (states[1]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[16]))  //24 simple algorithmic instructions, jr
   ||
-  (states[4]&&(decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero))) // eret break syscall teq
+  (states[4]&&(decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero))||decoded_instr[30]||decoded_instr[31]||decoded_instr[36]) // eret break syscall teq   j   jal  jalr
 );
 
-assign npc_input_signal[0]=
-assign npc_input_signal[1]=
+//01 Rs_value,for jr,jalr      10:joint for  j, jal
+assign npc_input_signal[0]=(
+  (states[1]&&decoded_instr[16])  //jr
+  ||
+  (states[4]&&decoded_instr[36])  //jalr
+  
+);
+assign npc_input_signal[1]=(
+  (states[4]&&(decoded_instr[30]||decoded_instr[31]))
+);
 
 assign pc_ena=states[0]&!rst;
 
@@ -136,9 +146,11 @@ assign ext5_input_signal=decoded_instr[13]||decoded_instr[14]||decoded_instr[15]
 assign ir_in=!rst&states[0];
 assign decode_ena=!rst&states[0];
 
-//24 simple instructions      mft0
+//24 simple instructions      mft0 jal jalr
 assign regfile_w=!rst&&(
-  states[4]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[44])
+  (states[4]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[44]))
+  ||
+  (states[2]&&(decoded_instr[31]||decoded_instr[36]))   // note that Z reg stores pc+4 then
 );
 
 //00:Rd  01:Rt //10:$31

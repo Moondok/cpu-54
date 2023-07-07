@@ -88,7 +88,8 @@ controller controller_inst(.clk(clk),.rst(rst),.decoded_instr(decoded_instr),.de
 
 instrument_decoder decodere_inst(.raw_instruction(instr),.ena(decode_ena),.code(decoded_instr));
 
-ir ir_inst(.clk(clk),.ir_in(ir_in),w_data(instr),.r_data()); // ir stores instr only
+wire [31:0] ir_data;
+ir ir_inst(.clk(clk),.ir_in(ir_in),w_data(instr),.r_data(ir_data)); // ir stores instr only
 
 wire [31:0] pc_value;
 pcreg pc_inst(.clk(clk),.ena(pc_ena),.rstn(rst),.w_data(npc_value),.r_data(pc_value));
