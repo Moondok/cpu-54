@@ -131,7 +131,7 @@ ext #(5) ext_inst1(.in(ext5_input),.sign(1'b0),.o(re_ext5));
 
 // to extend 16 bit imm to 32 bit 
 wire [31:0] re_ext_imm;
-ext #(16) ext_inst2(.in(instr[15:0]),.sign(ext16_extend_signal1),.o(re_ext_imm));
+ext #(16) ext_inst2(.in(instr[15:0]),.sign(extend16_signal1),.o(re_ext_imm));
 
 wire [31:0] clz_value;
 clz clz_inst(.value(Rs_value),.num_zero(clz_value));

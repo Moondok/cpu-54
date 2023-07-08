@@ -3,6 +3,6 @@ module ext #(parameter WIDTH=16)(
     input sign,
     output [31:0]o
 );
-assign o=sign?{{(33-WIDTH){1'b0}},in}:{{(33-WIDTH){in[WIDTH-1]}},in};
+assign o=sign?{{(32-WIDTH){in[WIDTH-1]}},in}:{{(32-WIDTH){1'b0}},in};
 
 endmodule

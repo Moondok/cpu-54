@@ -18,7 +18,7 @@ begin
    end
 end
 
-assign data_out= (ena&&!rstn)? mem:32'h00400000;
+assign data_out= (!rstn)? mem:32'h00400000;
 
 
 

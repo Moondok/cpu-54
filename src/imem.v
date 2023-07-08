@@ -3,12 +3,12 @@ module imem(
     output [31:0] spo
     
 );
-reg [31:0] mem [1024:0];
+reg [31:0] mem [8096:0];
 
 initial
 begin
-  mem[0]=32'h3c1d1001;
-  mem[1]=32'h37bd0004;
+//   mem[0]=32'h3c1d1001;
+//   mem[1]=32'h37bd0004;
 
 end
 
