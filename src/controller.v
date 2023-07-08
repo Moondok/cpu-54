@@ -17,25 +17,25 @@ module controller ( // 30 control signals
     output [1:0] npc_input_signal, //ok
     output ext5_input_signal,   //ok
     output extend16_signal1, //for imm extend  //ok
-    output extend16_signal2, //for lh instr
-    output extend8_signal1, //for lb instr
-    output [1:0] dmem2ref_signal,
+    output extend16_signal2, //for lh instr  //ok
+    output extend8_signal1, //for lb instr   //ok
+    output [1:0] dmem2ref_signal,  //ok
     output MDR_in, //ok
     output [1:0] operand1_signal,  //ok
     output [1:0] operand2_signal,  //ok
     output dmem_w, //ok
     output dmem_r, //ok
-    output hi_ena,
-    output lo_ena,
-    output [1:0] hi_input_signal,
+    output hi_ena, //ok
+    output lo_ena, //ok
+    output [1:0] hi_input_signal, 
     output [1:0] lo_input_signal,
     output [1:0] store_format_signal, //ok
     output [4:0] cp0_cause,   //ok
     output cp0_ena,           //ok
-    output div_start,
-    output divu_start,
-    output mul_start,
-    output mulu_start,
+    output div_start,     //ok
+    output divu_start,    //ok
+    output mul_start,     //ok
+    output mulu_start,    //ok
 
     output [3:0] alu_control
 
@@ -73,8 +73,8 @@ begin
         if(decoded_instr[16]==1'b1) //jr
           next_state=state0;
 
-      //3 periods: mtc0 mfc0 eret break syscall j
-        else if(decoded_instr[44]||decoded_instr[45]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||decoded_instr[30])
+      //3 periods: mtc0 mfc0 eret break syscall j mthi mtlo mfhi mflo div,divu mul mulu clz
+        else if(decoded_instr[44]||decoded_instr[45]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||decoded_instr[29]||decoded_instr[46]||decoded_instr[47]||decoded_instr[48]||decoded_instr[49]||decoded_instr[36:33]||decoded_instr[31])
           next_state=state4;
 
       // 4 periods: 24 simple algorithmic instructions  , s*,  teq 
@@ -97,41 +97,51 @@ begin
       end
 
       else if(next_state==state4)
+      begin
+        if(decoded_instr[36:33]&&busy) // div ,divu mul mulu : only whe calculation is done , we change state
+          next_state=state4; 
+        else
           next_state=state0;
+      end
+      
     end
     
 end
 assign zin=!rst&&(
   ((states[0]||states[2])&&(decoded_instr[15:0]||decoded_instr[23:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]))  //24 simple algorithmic instructions  l* s*  ,z can be write in the 1st or 3rd period
-  
+  ||
+  (states[0]&&(decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31])) //cp0(6 instrs), hi lo(4 instrs) clz
 
 );
 
 assign zout=!rst&&(
   ((states[1]||states[4])&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]))  //24 simple algorithmic instructions, l* s* z should be read in the 2nd or the last period
   ||
-  (states[2]&&(decoded_instr[31]||decoded_instr[36]))// for jal and jalr , to reserve the spot
+  (states[2]&&(decoded_instr[30]||decoded_instr[36]))// for jal and jalr , to reserve the spot
   ||
   (states[3]&&(decoded_instr[23]||decoded_instr[38]||decoded_instr[39]||decoded_instr[40]||decoded_instr[41])) // l* , let the read addr out
   ||
   (states[4]&&(decoded_instr[24]||decoded_instr[42]||decoded_instr[43])) //s*, let the write dmem addr out
+  ||
+  (states[1]&&(decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31])) //cp0(6 instrs)  , hi lo(4 instrs) clz
+
 );
 
 assign npc_in=!rst&&(
-  (states[1]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[16]||decoded_instr[24:23]||decoded_instr[43:38]))  //24 simple algorithmic instructions, jr , l*
+  (states[1]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[16]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]))  //24 simple algorithmic instructions, jr , l*
   ||
-  (states[4]&&(decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero))||decoded_instr[30]||decoded_instr[31]||decoded_instr[36]) // eret break syscall teq   j   jal  jalr
+  (states[4]&&(decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero))||decoded_instr[29]||decoded_instr[30]||decoded_instr[36]) // eret break syscall teq   j   jal  jalr
 );
 
-//01 Rs_value,for jr,jalr      10:joint for  j, jal
+//01 Rs_value,for jr,jalr      10:joint for  j, jal     11: exc_addr
 assign npc_input_signal[0]=(
   (states[1]&&decoded_instr[16])  //jr
   ||
-  (states[4]&&decoded_instr[36])  //jalr
+  (states[4]&&(decoded_instr[36]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero)))  //jalr  cp0(4 instrs)
   
 );
 assign npc_input_signal[1]=(
-  (states[4]&&(decoded_instr[30]||decoded_instr[31]))
+  (states[4]&&(decoded_instr[29]||decoded_instr[30]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero))) // j jal cp0(4 instrs)
 );
 
 assign pc_ena=states[0]&!rst;
@@ -141,17 +151,17 @@ assign operand1_signal[0]=(
   states[2]&&(decoded_instr[15:10])
 );
 assign operand1_signal[1]=(
-  states[0]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38])  //pc+4
+  states[0]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31])  //pc+4
 );
 
 // 11:4  01: imm
 assign operand2_signal[0]=(
-  (states[0]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27])) //pc+4
+  (states[0]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31])) //pc+4
   || 
   (states[2]&&(decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38])) // extend 16 bit imm to alu
 );
 assign operand2_signal[1]=(
-  states[0]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38])  //pc+4
+  states[0]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31])  //pc+4
 );
 
 
@@ -167,21 +177,21 @@ assign MDR_in=states[3]&&(decoded_instr[23]||decoded_instr[38]||decoded_instr[39
 //s* : write in the dmem in the 4th(last) period
 assign dmem_w=states[4]&&(decoded_instr[24]||decoded_instr[42]||decoded_instr[43]);
 
-//24 simple instructions      mft0 jal jalr  l*
+//24 simple instructions      mft0 jal jalr  l* mfhi mflo mul
 assign regfile_w=!rst&&(
-  (states[4]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[44]||decoded_instr[23]||decoded_instr[41:38]))
+  (states[4]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[44]||decoded_instr[23]||decoded_instr[41:38]||decoded_instr[46]||decoded_instr[48]||decoded_instr[34]||decoded_instr[31]))
   ||
-  (states[2]&&(decoded_instr[31]||decoded_instr[36]))   // note that Z reg stores pc+4 then
+  (states[2]&&(decoded_instr[30]||decoded_instr[36]))   // note that Z reg stores pc+4 then
 );
 
 //00:Rd  01:Rt //10:$31
 assign ref_waddr_signal[0]=decoded_instr[22:17]||decoded_instr[28:27]; //addi slti lui...
-assign ref_waddr_signal[1]=decoded_instr[31]||decoded_instr[36]; //jal jalr 
+assign ref_waddr_signal[1]=decoded_instr[30]||decoded_instr[36]; //jal jalr 
 
-//000: z_value //001 dmem2ref //010: clz_value
-assign ref_wdata_signal[0]=decoded_instr[23]||decoded_instr[38]||decoded_instr[39]||decoded_instr[40]||decoded_instr[41];
-assign ref_wdata_signal[1]=
-assign ref_wdata_signal[2]=
+//000: z_value //001 dmem2ref //010: clz_value  //101: cp0_data  //011: hi_data  //100: lo_data //110 :res_mul[31:0]
+assign ref_wdata_signal[0]=decoded_instr[23]||decoded_instr[38]||decoded_instr[39]||decoded_instr[40]||decoded_instr[41]||decoded_instr[44]||decoded_instr[46];
+assign ref_wdata_signal[1]=decoded_instr[46]||decoded_instr[34]||decoded_instr[31];
+assign ref_wdata_signal[2]=decoded_instr[44]||decoded_instr[48]||decoded_instr[34];
 
 // addi addiu slti sltiu lw lh lb lhu lbu sw sb sh
 assign extend16_signal1=decoded_instr[17]||decoded_instr[18]||decoded_instr[27]||decoded_instr[28]||decoded_instr[24:23]||decoded_instr[43:38];
@@ -206,6 +216,25 @@ assign cp0_ena=!rst&&(states[4]&&(decoded_instr[50]||decoded_instr[51]||decoded_
 
 
 assign cp0_cause=decoded_instr[51]?SYSCALL:(decoded_instr[52]?TEQ:(decoded_instr[53]?BREAK:5'b00000));
+
+
+assign hi_ena=states[4]&&(decoded_instr[47]||decoded_instr[33]||decoded_instr[32]||decoded_instr[35]);
+assign lo_ena=states[4]&&(decoded_instr[49]||decoded_instr[33]||decoded_instr[32]||decoded_instr[35]);
+
+// note that the start signal in div/divu and mul/mulu are different
+assign div_start=states[1]&&decoded_instr[33];
+assign divu_start=states[1]&&decoded_instr[32];
+assign mul_start=decoded_instr[34]; // through multiple cycles
+assign mulu_start=decoded_instr[35]; // through multiple cycles
+
+//01 res_r  10 res_ru  11 multu[63:32]
+assign hi_input_signal[0]=decoded_instr[33]||decoded_instr[35];
+assign hi_input_signal[1]=decoded_instr[32]||decoded_instr[35];
+
+//01 res_q 10 res_qu  11 multu[31:0]
+assign lo_input_signal[0]=decoded_instr[33]||decoded_instr[35];
+assign lo_input_signal[1]=decoded_instr[32]||decoded_instr[35];
+
 
 assign alu_control[0]=
 assign alu_control[1]=

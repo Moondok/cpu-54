@@ -32,7 +32,7 @@ begin
       factor<=0;
       sign<=0;
       count<=0;
-      done_=0;
+      done_=1;
       result=0;
       tmp_result<=0;
     end
@@ -81,7 +81,7 @@ begin
       
       else if(count==96)
       begin
-        done_<=1;
+        done_<=1'b1;
         result<={tmp_result[31],tmp_result[31:0],faciend[31:1]};
         count<=0;
       end

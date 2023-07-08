@@ -86,7 +86,7 @@ reg [63:0] res=0;
 assign z=res;
 
 reg [2:0] counter=0;
-reg done_;
+reg done_=1'b1;
 
 
 always @(negedge clk) 
@@ -161,7 +161,7 @@ begin
       add16_31<=0;
       res<=0;
       counter<=0;
-      done_<=0;
+      done_<=1'b1;
 
     end    
     else if(start)

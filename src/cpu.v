@@ -1,6 +1,23 @@
 `include "alu.v"
-`include "z_reg.v"
 `include "MDR.v"
+`include "controller.v"
+`include "cp0.v"
+`include "clz.v"
+`include "DIV.v"
+`include "DIVU.v"
+`include "ext.v"
+`include "hilo.v"
+`include "instruction_decoder.v"
+`include "ir.v"
+`include "joint.v"
+`include "MDR.v"
+`include "MULT.v"
+`include "MULTU.v"
+`include "npc.v"
+`include "pcreg.v"
+`include "regfile.v"
+`include "selector.v"
+`include "z_reg.v"
 module cpu (
     input clk,
     input rst,
@@ -121,8 +138,8 @@ clz clz_inst(.value(Rs_value),.num_zero(clz_value));
 wire [31:0] MDR_data;
 MDR MDR_inst(.clk(clk),.rst(rst),.data_in(dmem_data),.ena(MDR_in),.data_out(MDR_data));
 
-ext #(8) ext_inst3(.in(MDR_data[7:0]),.sign(extend_signal),.o(re_ext_dmem_b)); //b means byte
-ext #(16) ext_inst4(.in(MDR_data[15:0]),.sign(extend_signal),.o(re_ext_dmem_hw)); // hw means half word
+ext #(8) ext_inst3(.in(MDR_data[7:0]),.sign(extend8_signal1),.o(re_ext_dmem_b)); //b means byte
+ext #(16) ext_inst4(.in(MDR_data[15:0]),.sign(extend16_signal2),.o(re_ext_dmem_hw)); // hw means half word
 
 wire [31:0] dmem2ref;// for lw lh lhu lb lbu
 mux4 #(32) mux4_inst3(.in1(dmem_data),.in2(re_ext_dmem_hw),.in3(re_ext_dmem_b),.in4(32'bz),.signal(dmem2ref_signal),.o(dmem2ref));
