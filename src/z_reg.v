@@ -4,7 +4,7 @@ module z_reg (
     input zin,
     input zout,
     input [31:0] w_data,
-    input [31:0] r_data
+    output [31:0] r_data
     
 );
 
