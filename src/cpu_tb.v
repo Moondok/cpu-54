@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
 `include "sccomp_dataflow.v"
 
-
 module cpu54_tb();
     reg clk;
     reg reset;
@@ -9,20 +8,22 @@ module cpu54_tb();
     wire [31:0]inst;
     wire [31:0]res_m1;
     reg [31:0] pc_pre;
+    reg [31:0] pre_inst;
     sccomp_dataflow uut(clk,reset,pc,inst);
     integer file_output;
     integer counter = 0;
     initial 
     begin
-        file_output = $fopen("./result.txt");
-        pc_pre=32'h00000000;
+        file_output = $fopen("./42.45_mfc0mtc0_result.txt");
+        pc_pre=32'h00400000;
+        pre_inst=32'b0;
         reset = 1;
         clk = 0;
         #2   reset = 0;
     end
     initial 
     begin
-        $readmemh("../tests_data/1_addi.hex.txt", uut.imem_inst.mem,0,8095);
+        $readmemh("../tests_data/42.45_mfc0mtc0.hex.txt", uut.imem_inst.mem,0,8095);
     end
        
 
@@ -34,8 +35,8 @@ module cpu54_tb();
             if(pc_pre!=pc)
             begin
             counter = counter+1;
-                $fdisplay(file_output,"pc: %h",pc);
-                $fdisplay(file_output,"instr: %h",inst);
+                $fdisplay(file_output,"pc: %h",pc_pre);
+                $fdisplay(file_output,"instr: %h",pre_inst);
                 //$fdisplay(file_output,"imem: %h",cpu54_tb.uut.imem_inst.mem[0]);
                 $fdisplay(file_output,"regfile0: %h",cpu54_tb.uut.sccpu.cpu_ref.array_reg[0]);
                 $fdisplay(file_output,"regfile1: %h",cpu54_tb.uut.sccpu.cpu_ref.array_reg[1]);
@@ -71,6 +72,7 @@ module cpu54_tb();
                 $fdisplay(file_output,"regfile31: %h",cpu54_tb.uut.sccpu.cpu_ref.array_reg[31]);
 
                 pc_pre=pc;
+                pre_inst=inst;
             end
         end
        end
@@ -80,7 +82,7 @@ module cpu54_tb();
             $dumpfile("cpu.vcd");
             $dumpvars;
 
-            #1200;
+            #4000;
             $finish;
         end
        wire [4:0]state;

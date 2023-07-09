@@ -145,7 +145,7 @@ ext #(8) ext_inst3(.in(MDR_data[7:0]),.sign(extend8_signal1),.o(re_ext_dmem_b));
 ext #(16) ext_inst4(.in(MDR_data[15:0]),.sign(extend16_signal2),.o(re_ext_dmem_hw)); // hw means half word
 
 wire [31:0] dmem2ref;// for lw lh lhu lb lbu
-mux4 #(32) mux4_inst3(.in1(dmem_data),.in2(re_ext_dmem_hw),.in3(re_ext_dmem_b),.in4(32'bz),.signal(dmem2ref_signal),.o(dmem2ref));
+mux4 #(32) mux4_inst3(.in1(MDR_data),.in2(re_ext_dmem_hw),.in3(re_ext_dmem_b),.in4(32'bz),.signal(dmem2ref_signal),.o(dmem2ref));
 
 //store
 // here we do not execute any extend opretation ,we control the wirte byte ,write half word directly in the dmem module by control signal

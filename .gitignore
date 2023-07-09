@@ -1,3 +1,5 @@
 cpu54/
 *.xlsx
 *.out
+tests_data/
+*.txt
