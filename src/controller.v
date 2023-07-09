@@ -116,7 +116,7 @@ begin
 
       else if(next_state==state4)
       begin
-        if(decoded_instr[36:33]&&busy) // div ,divu mul mulu : only whe calculation is done , we change state
+        if(decoded_instr[35:32]&&busy) // div ,divu mul mulu : only whe calculation is done , we change state
           next_state=state4; 
         else
           next_state=state0;
@@ -247,8 +247,8 @@ assign lo_ena=states[4]&&(decoded_instr[49]||decoded_instr[33]||decoded_instr[32
 // note that the start signal in div/divu and mul/mulu are different
 assign div_start=states[1]&&decoded_instr[33];
 assign divu_start=states[1]&&decoded_instr[32];
-assign mul_start=decoded_instr[34]; // through multiple cycles
-assign mulu_start=decoded_instr[35]; // through multiple cycles
+assign mul_start=decoded_instr[34]&&next_state[4]; // through multiple cycles
+assign mulu_start=decoded_instr[35]&&next_state[4]; // through multiple cycles
 
 //01 res_r  10 res_ru  11 multu[63:32]
 assign hi_input_signal[0]=decoded_instr[33]||decoded_instr[35];

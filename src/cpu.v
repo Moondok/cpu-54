@@ -183,7 +183,7 @@ wire mul_done;
 wire mulu_done;
 wire div_busy;
 wire divu_busy;
-assign busy=!mul_done&&!mulu_done&&div_busy&&divu_busy;
+assign busy=(~mul_done)|(~mulu_done)|div_busy|divu_busy;
 
 wire [31:0] res_q;
 wire [31:0] res_r;

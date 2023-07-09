@@ -14,7 +14,7 @@ module cpu54_tb();
     integer counter = 0;
     initial 
     begin
-        file_output = $fopen("./42.45_mfc0mtc0_result.txt");
+        file_output = $fopen("./54_div_result.txt");
         pc_pre=32'h00400000;
         pre_inst=32'b0;
         reset = 1;
@@ -23,7 +23,7 @@ module cpu54_tb();
     end
     initial 
     begin
-        $readmemh("../tests_data/42.45_mfc0mtc0.hex.txt", uut.imem_inst.mem,0,8095);
+        $readmemh("../tests_data/54_div.hex.txt", uut.imem_inst.mem,0,8095);
     end
        
 
@@ -82,7 +82,7 @@ module cpu54_tb();
             $dumpfile("cpu.vcd");
             $dumpvars;
 
-            #4000;
+            #40000;
             $finish;
         end
        wire [4:0]state;

@@ -24,7 +24,7 @@ assign tmp_r2=r_sign? reg_r+reg_b:reg_r;
 assign r=dividend[31]?(~tmp_r2+1):tmp_r2;
 assign q=(dividend[31]^divisor[31])?(~reg_q+1):reg_q;
 
-always @(posedge clock or posedge reset) 
+always @(negedge clock or posedge reset) 
 begin
     if(reset==1)
     begin

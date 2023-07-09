@@ -88,6 +88,7 @@ assign z=res;
 reg [2:0] counter=0;
 reg done_=1'b1;
 
+assign done=done_;
 
 always @(negedge clk) 
 begin
