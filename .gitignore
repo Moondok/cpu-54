@@ -1,4 +1,5 @@
 cpu54/
+cpu/
 *.xlsx
 *.out
 tests_data/

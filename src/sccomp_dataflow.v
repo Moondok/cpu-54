@@ -1,7 +1,7 @@
- `include "dmem.v"
- `include "imem.v"
- `include "cpu.v"
-
+`include "dmem.v"
+`include "imem.v"
+`include "cpu.v"
+`timescale 1ns / 1ps
 module sccomp_dataflow (
     input clk_in, //posedge write regfile or dmem, negedge write pc
     input reset, //1: reset   0: doing nothing

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module ir (
     input clk,
     input ir_in,

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module mux4 #(parameter WIDTH=32)
 (
     input [WIDTH-1:0] in1,

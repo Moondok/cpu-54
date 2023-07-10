@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module ext #(parameter WIDTH=16)(
     input [WIDTH-1:0] in,
     input sign,

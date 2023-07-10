@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module DIV (
     input [31:0] dividend,
     input [31:0] divisor,

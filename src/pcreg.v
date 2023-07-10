@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module pcreg (
     input clk,
     input ena,

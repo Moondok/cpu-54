@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module npc (
     input [31:0] data_in,
     input npc_in, //signal for write

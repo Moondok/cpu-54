@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module instrument_decoder (
     input [31:0] raw_instruction,
     input ena,

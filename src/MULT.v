@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module MULT (
     input clk,
     input reset,
@@ -8,19 +9,20 @@ module MULT (
     output done
 
 );
-assign done=done_;
+
 
 reg aux_reg=0; // on the end of b
 reg [31:0] faciend=0;
 reg [32:0] factor=0;// why 33 bit: 2 signal bits
 
-reg [1:0]sign=0;//y_n-y_{n-1} //0:0 0 or 1 1   1ï¼š1 0    2ï¼š0 1
+reg [1:0]sign=0;//y_n-y_{n-1} //0:0 0 or 1 1   1ï¼?1 0    2ï¼?0 1
 
 //we use booth multiply method
 reg [6:0] count=0;
 reg [63:0] result=0;
 reg [32:0] tmp_result;
 reg done_=0;
+assign done=done_;
 assign z=result;
 
 always @(negedge clk)

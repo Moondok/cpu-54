@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module controller ( // 30 control signals
     input clk,
     input rst,
@@ -41,7 +42,7 @@ module controller ( // 30 control signals
 
 );
 
-reg [4:0] next_state=state0;  // kick up the execution
+
 
 localparam state0=1;
 localparam state1=2;
@@ -53,7 +54,7 @@ localparam TEQ=5'b01101;
 localparam BREAK=5'b01001;
 localparam SYSCALL=5'b01000;
 
-
+reg [4:0] next_state=state0;  // kick up the execution
 reg [4:0] states; //each bit stands for one state, one-hot coding
 always @(posedge clk) 
 begin
@@ -66,21 +67,21 @@ begin
     begin
       states<=next_state;
       if(next_state==state0) // unconditional jump from state0 to state1 
-        next_state=state1;
+        next_state<=state1;
 
       else if(next_state==state1)//instr[16](jr),directly to state0
       begin
         if(decoded_instr[16]==1'b1) //jr
-          next_state=state0;
+          next_state<=state0;
 
       //3 periods: mtc0 mfc0 eret break syscall j mthi mtlo mfhi mflo div,divu mul mulu clz
         else if(decoded_instr[44]||decoded_instr[45]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||decoded_instr[29]||decoded_instr[46]||decoded_instr[47]||decoded_instr[48]||decoded_instr[49]||decoded_instr[35:32]||decoded_instr[31])
-          next_state=state4;
+          next_state<=state4;
       
       //begz 3 or 4 periods
         else if(decoded_instr[37]) //Rs>=0
         begin
-          if(Rs_signal==1'b1)
+          if(Rs_signal==1'b0)
             next_state<=state3;
           else
             next_state<=state4;
@@ -91,7 +92,7 @@ begin
       // 4 periods: 24 simple algorithmic instructions  , s*,  teq 
       // 5 periods : l*
         else 
-          next_state=state2;
+          next_state<=state2;
       end
 
       else if(next_state==state2)
@@ -102,7 +103,7 @@ begin
         // bne bnq
         else if(decoded_instr[25]&&zero)
           next_state<=state3; // if Rs==Rt to state3 to perform add
-        else if(decoded_instr[26&&!zero])
+        else if(decoded_instr[26]&&!zero)
           next_state<=state3; // if Rs!=Rt to state3 to perform add
         
         else
@@ -117,9 +118,9 @@ begin
       else if(next_state==state4)
       begin
         if(decoded_instr[35:32]&&busy) // div ,divu mul mulu : only whe calculation is done , we change state
-          next_state=state4; 
+          next_state<=state4; 
         else
-          next_state=state0;
+          next_state<=state0;
       end
       
     end
@@ -128,7 +129,7 @@ end
 assign zin=!rst&&(
   ((states[0]||states[2])&&(decoded_instr[15:0]||decoded_instr[23:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]))  //24 simple algorithmic instructions  l* s*  ,z can be write in the 1st or 3rd period
   ||
-  (states[0]&&(decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37]||decoded_instr[30]||decoded_instr[36]||decoded_instr[16])) //cp0(6 instrs), hi lo(4 instrs) clz
+  (states[0]&&(decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37]||decoded_instr[30]||decoded_instr[36]||decoded_instr[16]||decoded_instr[29])) //cp0(6 instrs), hi lo(4 instrs) clz // last 29 is added in 7-10 0:20
   ||
   (states[3]&&(decoded_instr[26:25]||decoded_instr[37]))// bne beq begz
 );
@@ -140,16 +141,16 @@ assign zout=!rst&&(
   ||
   (states[3]&&(decoded_instr[23]||decoded_instr[38]||decoded_instr[39]||decoded_instr[40]||decoded_instr[41])) // l* , let the read addr out
   ||
-  (states[4]&&(decoded_instr[24]||decoded_instr[42]||decoded_instr[43]||decoded_instr[26]||decoded_instr[25]||decoded_instr[37])) //s*, let the write dmem addr out  , bne beq begz
+  (states[4]&&(decoded_instr[24]||decoded_instr[42]||decoded_instr[43]||decoded_instr[26]||decoded_instr[25]||decoded_instr[37])) //s*, let the write dmem addr out  , bne beq begz    addn j and jal in 7-10 7:58
   ||
-  (states[1]&&(decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37])) //cp0(6 instrs)  , hi lo(4 instrs) clz
+  (states[1]&&(decoded_instr[29]||decoded_instr[30]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37])) //cp0(6 instrs)  , hi lo(4 instrs) clz
 
 );
 
 assign npc_in=!rst&&(
-  (states[1]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[16]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37]))  //24 simple algorithmic instructions, jr , l*
+  (states[1]&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[16]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37]||decoded_instr[29]||decoded_instr[30]))  //24 simple algorithmic instructions, jr , l*
   ||
-  (states[4]&&(decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero)||decoded_instr[29]||decoded_instr[30]||decoded_instr[36]||decoded_instr[26]||decoded_instr[25]||decoded_instr[37])) // eret break syscall teq   j   jal  jalr
+  (states[4]&&(decoded_instr[29]||decoded_instr[30]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero)||decoded_instr[30]||decoded_instr[36]||decoded_instr[26]||decoded_instr[25]||decoded_instr[37])) // eret break syscall teq   j   jal  jalr
 );
 
 //01 Rs_value,for jr,jalr      10:joint for  j, jal     11: exc_addr
@@ -160,7 +161,7 @@ assign npc_input_signal[0]=(
   
 );
 assign npc_input_signal[1]=(
-  (states[4]&&(decoded_instr[29]||decoded_instr[30]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero))) // j jal cp0(4 instrs)
+  (states[4]&&(decoded_instr[29]||decoded_instr[30]|| decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero))) // j jal cp0(4 instrs)  /// delete j and jal here 7-10 7:45
 );
 
 assign pc_ena=states[0]&!rst;

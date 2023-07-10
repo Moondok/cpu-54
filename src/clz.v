@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module clz (
     input [31:0] value,
     output reg [31:0] num_zero

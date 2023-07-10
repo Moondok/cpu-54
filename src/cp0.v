@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module CP0(
 input clk,
 input rst,
@@ -13,6 +14,7 @@ input [4:0]cause,
 output [31:0] rdata, // Data from CP0 register for GP register
 output reg[31:0]exc_addr // Address for PC at the beginning of an exception
 );
+reg [31:0] cp0_regs[31:0] ;
 
 // 3 tags representing reasons for interupting
 localparam TEQ=5'b01101;
@@ -25,7 +27,7 @@ localparam epc_reg_pos=14;
 
 assign rdata= mfc0? cp0_regs[Rd]:32'bz;
 
-reg [31:0] cp0_regs[31:0] ;
+
 always @(negedge clk)// about stuff with edge is pending 
 begin
     if(rst)

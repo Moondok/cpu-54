@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module dmem (
     input clk,
     input dm_w,

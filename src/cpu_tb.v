@@ -14,24 +14,25 @@ module cpu54_tb();
     integer counter = 0;
     initial 
     begin
-        file_output = $fopen("./54_div_result.txt");
+        file_output = $fopen("./52_bgez_result.txt");
         pc_pre=32'h00400000;
         pre_inst=32'b0;
         reset = 1;
         clk = 0;
-        #2   reset = 0;
+        #2 reset = 0;
     end
-    initial 
-    begin
-        $readmemh("../tests_data/54_div.hex.txt", uut.imem_inst.mem,0,8095);
-    end
-       
+  initial 
+  begin
+      $readmemh("../tests_data/52_bgez.hex.txt", uut.imem_inst.mem,0,8095);
+  end
 
      always 
      begin
      #2 clk=~clk;
         if(clk==1'b1&&reset==0)
         begin
+//            $display("%h",counter);
+//                $display("%h",pc);
             if(pc_pre!=pc)
             begin
             counter = counter+1;
@@ -71,20 +72,23 @@ module cpu54_tb();
                 $fdisplay(file_output,"regfile30: %h",cpu54_tb.uut.sccpu.cpu_ref.array_reg[30]);
                 $fdisplay(file_output,"regfile31: %h",cpu54_tb.uut.sccpu.cpu_ref.array_reg[31]);
 
-                pc_pre=pc;
-                pre_inst=inst;
+               pc_pre=pc;
+               pre_inst=inst;
+//                if(counter>=10)
+//                    $fclose(file_output);
+                
             end
         end
        end
 
-       initial
-        begin
-            $dumpfile("cpu.vcd");
-            $dumpvars;
+      initial
+       begin
+           $dumpfile("cpu.vcd");
+           $dumpvars;
 
-            #40000;
-            $finish;
-        end
+           #4000;
+           $finish;
+       end
        wire [4:0]state;
 
        assign state=cpu54_tb.uut.sccpu.controller_inst.states;
@@ -94,13 +98,12 @@ module cpu54_tb();
        wire exception;
        wire eret;
        wire [4:0]cp0_cause;
-       assign exeption=cpu54_tb.uut.sccpu.cp0_inst.exception;
-       assign eret=cpu54_tb.uut.sccpu.cp0_inst.eret;
-       assign exc_addr=cpu54_tb.uut.sccpu.exc_addr;
+//       assign eret=cpu54_tb.uut.sccpu.cp0_inst.eret;
+//       assign exc_addr=cpu54_tb.uut.sccpu.exc_addr;
 
-       assign cp0_cause=cpu54_tb.uut.sccpu.cp0_cause;
+//       assign cp0_cause=cpu54_tb.uut.sccpu.cp0_cause;
        assign decoded_instr=cpu54_tb.uut.sccpu.decoded_instr;
-       wire [31:0]cp0_reg;//CP0寄存器
+       wire [31:0]cp0_reg;
        assign cp0_reg=cpu54_tb.uut.sccpu.cp0_inst.cp0_regs[12];
 
 

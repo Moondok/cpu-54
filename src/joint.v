@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module joint (
     input [3:0] pc_value,
     input [27:0] jump_value,
