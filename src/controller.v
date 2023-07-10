@@ -75,7 +75,7 @@ begin
           next_state<=state0;
 
       //3 periods: mtc0 mfc0 eret break syscall j mthi mtlo mfhi mflo div,divu mul mulu clz
-        else if(decoded_instr[44]||decoded_instr[45]||decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||decoded_instr[29]||decoded_instr[46]||decoded_instr[47]||decoded_instr[48]||decoded_instr[49]||decoded_instr[35:32]||decoded_instr[31])
+        else if(decoded_instr[44]||decoded_instr[45]||decoded_instr[29]||decoded_instr[46]||decoded_instr[47]||decoded_instr[48]||decoded_instr[49]||decoded_instr[35:32]||decoded_instr[31])
           next_state<=state4;
       
       //begz 3 or 4 periods
@@ -86,6 +86,10 @@ begin
           else
             next_state<=state4;
         end
+      
+      // break syscall eret : 4 period , pc0_ena signal occurs in the 3rd period
+      else if(decoded_instr[50]||decoded_instr[51]||decoded_instr[53])
+        next_state<=state3;
           
         
 
@@ -105,6 +109,8 @@ begin
           next_state<=state3; // if Rs==Rt to state3 to perform add
         else if(decoded_instr[26]&&!zero)
           next_state<=state3; // if Rs!=Rt to state3 to perform add
+        else if(decoded_instr[52])
+          next_state<=state3;
         
         else
           next_state<=state4; //default transfer to states 4, cuz most instructions are 4 periods
@@ -180,7 +186,7 @@ assign operand1_signal[1]=(
 assign operand2_signal[0]=(
   (states[0])//&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37])) //pc+4
   || 
-  (states[2]&&(decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38])) // extend 16 bit imm to alu
+  ((states[2]||states[4])&&(decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38])) // extend 16 bit imm to alu last to 4th period in 7-10 12:35
 );
 assign operand2_signal[1]=(
   states[0]//&&(decoded_instr[15:0]||decoded_instr[22:17]||decoded_instr[28:27]||decoded_instr[24:23]||decoded_instr[43:38]||decoded_instr[45:44]||decoded_instr[53:50]||decoded_instr[49:46]||decoded_instr[35:32]||decoded_instr[31]||decoded_instr[26:25]||decoded_instr[37])  //pc+4
@@ -236,7 +242,7 @@ assign store_format_signal[0]=decoded_instr[43];
 // sb
 assign store_format_signal[1]=decoded_instr[42];
 
-assign cp0_ena=!rst&&(states[4]&&(decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero)||decoded_instr[45]));
+assign cp0_ena=!rst&&(states[3]&&(decoded_instr[50]||decoded_instr[51]||decoded_instr[53]||(decoded_instr[52]&&zero)||decoded_instr[45]));
 
 
 assign cp0_cause=decoded_instr[51]?SYSCALL:(decoded_instr[52]?TEQ:(decoded_instr[53]?BREAK:5'b00000));
@@ -267,7 +273,9 @@ assign alu_control[0]=(
 assign alu_control[1]=(
   (states[1]&&(decoded_instr[26]||decoded_instr[25]))
   ||
-  ((states[2]||states[4])&&(decoded_instr[2]||decoded_instr[3]||decoded_instr[6]||decoded_instr[21]||decoded_instr[7]||decoded_instr[10]||decoded_instr[13]||decoded_instr[11]||decoded_instr[14]||decoded_instr[52]))
+  ((states[2]||states[4])&&(decoded_instr[2]||decoded_instr[3]||decoded_instr[6]||decoded_instr[21]||decoded_instr[7]||decoded_instr[10]||decoded_instr[13]||decoded_instr[11]||decoded_instr[14]))
+  ||
+  ((states[2]||states[3]||states[4])&&decoded_instr[52])
 
 );
 

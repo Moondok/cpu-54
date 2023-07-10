@@ -23,6 +23,7 @@ module cpu (
     input rst,
     input[31:0] instr,
     input[31:0] dmem_data,
+    input[1:0] detail_pos,
     output[31:0] data_addr,
     output [31:0] instr_addr,
     output[31:0] w_data,
@@ -183,8 +184,12 @@ MDR MDR_inst(.clk(clk),.rst(rst),.data_in(dmem_data),.ena(MDR_in),.data_out(MDR_
 
 wire [31:0] re_ext_dmem_b;
 wire [31:0] re_ext_dmem_hw;
-ext #(8) ext_inst3(.in(MDR_data[7:0]),.sign(extend8_signal1),.o(re_ext_dmem_b)); //b means byte
-ext #(16) ext_inst4(.in(MDR_data[15:0]),.sign(extend16_signal2),.o(re_ext_dmem_hw)); // hw means half word
+wire [7:0] load_byte_extend_input;
+wire [15:0] load_hw_exntend_input;
+assign load_byte_extend_input=(detail_pos==2'b00)?MDR_data[7:0]:((detail_pos==2'b01)?MDR_data[15:8]:((detail_pos==2'b10)?MDR_data[23:16]:MDR_data[31:24]));
+assign load_hw_exntend_input=(detail_pos==2'b00)?MDR_data[15:0]:MDR_data[31:16];
+ext #(8) ext_inst3(.in(load_byte_extend_input),.sign(extend8_signal1),.o(re_ext_dmem_b)); //b means byte
+ext #(16) ext_inst4(.in(load_hw_exntend_input),.sign(extend16_signal2),.o(re_ext_dmem_hw)); // hw means half word
 
 
 mux4 #(32) mux4_inst3(.in1(MDR_data),.in2(re_ext_dmem_hw),.in3(re_ext_dmem_b),.in4(32'bz),.signal(dmem2ref_signal),.o(dmem2ref));
