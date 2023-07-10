@@ -14,8 +14,8 @@ module cpu54_tb();
     integer counter = 0;
     initial 
     begin
-        file_output = $fopen("./52_bgez_result.txt");
-        pc_pre=32'h00400000;
+        file_output = $fopen("./final_result.txt");
+        pc_pre=32'h00000000;
         pre_inst=32'b0;
         reset = 1;
         clk = 0;
@@ -23,7 +23,7 @@ module cpu54_tb();
     end
   initial 
   begin
-      $readmemh("../tests_data/52_bgez.hex.txt", uut.imem_inst.mem,0,8095);
+      $readmemh("../tests_data/mips_54_mars_simulate_student_ForWeb.coe", uut.imem_inst.mem,0,8095);
   end
 
      always 
@@ -36,8 +36,8 @@ module cpu54_tb();
             if(pc_pre!=pc)
             begin
             counter = counter+1;
-                $fdisplay(file_output,"pc: %h",pc_pre);
-                $fdisplay(file_output,"instr: %h",pre_inst);
+                $fdisplay(file_output,"pc: %h",pc);
+                $fdisplay(file_output,"instr: %h",inst);
                 //$fdisplay(file_output,"imem: %h",cpu54_tb.uut.imem_inst.mem[0]);
                 $fdisplay(file_output,"regfile0: %h",cpu54_tb.uut.sccpu.cpu_ref.array_reg[0]);
                 $fdisplay(file_output,"regfile1: %h",cpu54_tb.uut.sccpu.cpu_ref.array_reg[1]);
@@ -86,7 +86,7 @@ module cpu54_tb();
            $dumpfile("cpu.vcd");
            $dumpvars;
 
-           #4000;
+           #80000;
            $finish;
        end
        wire [4:0]state;
