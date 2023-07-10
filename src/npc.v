@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 module npc (
+    input clk,
     input [31:0] data_in,
     input npc_in, //signal for write
     input rst,
@@ -7,7 +8,7 @@ module npc (
 );
 
 reg [31:0] next_instr_addr;
-always @(*) 
+always @(negedge clk) 
 begin
     if(rst)
         next_instr_addr<=32'h00400000;
