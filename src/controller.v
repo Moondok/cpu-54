@@ -43,7 +43,6 @@ module controller ( // 30 control signals
 );
 
 
-
 localparam state0=1;
 localparam state1=2;
 localparam state2=4;
@@ -56,6 +55,7 @@ localparam SYSCALL=5'b01000;
 
 reg [4:0] next_state=state0;  // kick up the execution
 reg [4:0] states; //each bit stands for one state, one-hot coding
+
 always @(posedge clk) 
 begin
     if(rst)

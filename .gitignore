@@ -23,3 +23,4 @@ tests_data/
 *.vhd
 *.xdc
 *.mif
+*.coe

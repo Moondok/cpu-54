@@ -1,8 +1,18 @@
 # A multi-cycle CPU which supports 54 Mips instructions
 
-## Brief Intro
+## brief Intro
 
-## About 54 instructions
+## about 54 instructions
+
+## holistic design
+
+![](holistic_design.jpg)
+
+## Platforms and devices
+
++ ```Visual Studio Code``` with ```iverilog``` and ```gtkwave```
++ ```vivado 2016.2```
++ DIGILENT Nexys4 DDR™ FPGA Board
 
 ## milestones
 

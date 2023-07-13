@@ -50,6 +50,7 @@ wire [31:0] z_value;
 wire [31:0] alu_result;
 
 wire [31:0] joint_addr; // for j,jal
+
 wire [31:0] re_ext18;
 wire [3:0] alu_control; //controller output
 
@@ -113,7 +114,7 @@ z_reg z_reg_inst(.clk(clk),.zin(zin),.zout(zout),.rst(rst),.w_data(alu_result),.
 
 mux4 #(32) mux4_inst2(.in1(z_value),.in2(Rs_value),.in3(joint_addr),.in4(exc_addr),.signal(npc_input_signal),.o(npc_wdata));
 
-npc npc_inst(.rst(rst),.data_in(npc_wdata),.npc_in(npc_in),.data_out(npc_value));
+npc npc_inst(.clk(clk),.rst(rst),.data_in(npc_wdata),.npc_in(npc_in),.data_out(npc_value));
 
 
 //clz setting

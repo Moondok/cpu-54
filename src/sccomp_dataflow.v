@@ -9,9 +9,8 @@ module sccomp_dataflow (
     // output [7:0] o_seg,
     // output [7:0] o_sel
     
-    output [31:0]pc,
-    output [31:0]inst
-     
+   output [31:0]pc,
+   output [31:0]inst
     
 );
 
@@ -35,7 +34,6 @@ wire [10:0] instruction_addr;
 assign data_addr=(data_addr_read-32'h10010000)/4;
 assign instruction_addr=(instr_addr_read-32'h00400000)/4;
 
-//assign pc=instr_addr_read;
 
 wire dmem_w;
 wire dmem_r;
@@ -54,9 +52,9 @@ assign pc=instr_addr_read;
 assign inst=instruction;
 
 //for board
-//divider divider_inst(.I_CLK(clk_in),.rst(1'b0),.O_CLK(clk_in_));
+// divider divider_inst(.I_CLK(clk_in),.rst(1'b0),.O_CLK(clk_in_));
 
-//seg7x16 seg7x16_inst(.clk(clk_in),.reset(reset),.cs(1'b1),.i_data(instr_addr_read),.o_seg(o_seg),.o_sel(o_sel));
+// seg7x16 seg7x16_inst(.clk(clk_in),.reset(reset),.cs(1'b1),.i_data(instr_addr_read),.o_seg(o_seg),.o_sel(o_sel));
 
 
 
